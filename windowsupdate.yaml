@@ -5,7 +5,7 @@
 
   tasks:
     - name: Install updates
-      win_updates:
+      ansible.windows.win_updates:
         search: yes
         download: yes
         install: yes
