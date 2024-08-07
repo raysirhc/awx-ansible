@@ -1,6 +1,6 @@
 - name: Check for Windows Updates
   hosts: windows_servers
-  gather_facts: yes
+  gather_facts: no
 
   tasks:
     - name: Search for Windows Updates
