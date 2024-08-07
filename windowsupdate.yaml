@@ -1,12 +1,11 @@
-- name: Check and install Windows updates
-  hosts: windows_servers
-  become: yes
-  gather_facts: no
+- name: Install all critical and security updates
+  win_updates:
+    category_names:
+    - CriticalUpdates
+    - SecurityUpdates
+    state: installed
+  register: update_result
 
-  tasks:
-    - name: Install updates
-      ansible.windows.win_updates:
-        search: yes
-        download: yes
-        install: yes
-        reboot_required: yes
+- name: Reboot host if required
+  win_reboot:
+  when: update_result.reboot_required
