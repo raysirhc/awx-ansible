@@ -1,11 +1,12 @@
-- name: Check for Windows Updates
+- name: Check and install Windows updates
   hosts: windows_servers
-  gather_facts: yes
+  become: yes
+  gather_facts: no
 
   tasks:
-    - name: Search for Windows Updates
-      ansible.windows.win_updates:
-        category_names: '*'
-        server_selection: 'windows_update'
-        state: searched
-      register: check_win_updates_patch_result
+    - name: Install updates
+      win_updates:
+        search: yes
+        download: yes
+        install: yes
+        reboot_required: yes
