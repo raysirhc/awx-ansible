@@ -1,0 +1,13 @@
+- name: Reboot Windows Machine if updates installed
+  hosts: windows_servers
+  become: yes
+  collections:
+    - ansible.windows
+  tasks:
+    - name: Check for pending updates
+      win_updates_fact:
+        state: present
+
+    - name: Reboot if updates installed
+      win_reboot:
+        when: ansible_facts.win_updates.pending_reboot
