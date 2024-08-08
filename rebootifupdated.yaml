@@ -9,4 +9,4 @@
 
     - name: Reboot if updates installed
       ansible.windows.win_reboot:
-        when: ansible_facts.win_updates.pending_reboot
+        reboot_timeout: 600
