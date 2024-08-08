@@ -4,7 +4,7 @@
 
   tasks:
     - name: Check for pending updates
-      ansible.windows.win_updates_fact:
+      ansible.windows.win_updates:
         state: present
 
     - name: Reboot if updates installed
