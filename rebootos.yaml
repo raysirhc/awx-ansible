@@ -1,6 +1,6 @@
 - name: Reboot Windows Machine
   hosts: windows_servers
-  become: no
+  gather_facts: no
   tasks:
     - name: Reboot the Windows machine
       ansible.windows.win_reboot:
