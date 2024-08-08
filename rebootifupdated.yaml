@@ -1,6 +1,7 @@
 - name: Reboot Windows Machine if updates installed
   hosts: windows_servers
   become: no
+  gathering_facts: no
 
   tasks:
     - name: Check for pending updates
