@@ -1,7 +1,9 @@
 ---
 - name: install if updates available.
+  become: true
+  become_method: sudo
+  become_user: root
   hosts: linux
-  become: no
   gather_facts: no
 
   tasks:
