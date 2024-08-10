@@ -15,4 +15,3 @@
 
     - name: Reboot a slow machine that might have lots of updates to apply
       ansible.builtin.reboot:
-        reboot_timeout: 3600
