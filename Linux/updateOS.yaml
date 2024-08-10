@@ -1,0 +1,6 @@
+---
+- name: "[RHEL] Update packages"
+  ansible.builtin.dnf:
+    update_cache: yes
+    name: "*"
+    state: latest
