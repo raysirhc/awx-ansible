@@ -1,6 +1,12 @@
 ---
-- name: "[RHEL] Update packages"
-  ansible.builtin.dnf:
-    update_cache: yes
-    name: "*"
-    state: latest
+- name: install if updates available.
+  hosts: linux
+  become: no
+  gather_facts: no
+
+  tasks:
+    - name: "[RHEL] Update packages"
+      ansible.builtin.dnf:
+        update_cache: yes
+        name: "*"
+        state: latest
