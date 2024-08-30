@@ -33,3 +33,8 @@
       ansible.windows.win_reboot:
         reboot_timeout: 600
       when: reboot_check.failed
+      
+    - name: Notify user
+      debug:
+        msg: "The server was rebooted because a pending reboot was detected."
+      when: reboot_check.failed
