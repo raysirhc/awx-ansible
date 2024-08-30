@@ -1,4 +1,4 @@
-- name: Reboot Windows Machine if updates installed
+- name: Update Windows and Reboot if necessary
   hosts: windows_servers
   become: no
   gather_facts: no
@@ -18,7 +18,7 @@
         state: installed
       register: check_win_updates_patch_result  
         
-    - name: Check if reboot is pending (for Windows 2012 and newer)
+    - name: Check if reboot is pending
       ansible.windows.win_shell: |
         $Pending = 0
         if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending") { $Pending = 1 }
