@@ -6,15 +6,14 @@
   tasks:
     - name: Ensure user bob is created and use custom credentials to create the user
       microsoft.ad.user:
-        name: yx2 y
+        name: yx2
         identity: yx2
         firstname: yx2
         surname: y
+        display_name
         password: 4rfv%TGB
         state: present
-        domain_username: LOCAL\yyx2
-        domain_password: SomePas2w0rd
-        domain_server: 192.168.110.87
+        upn: yx2@local.domain
         groups:
           set:
             - Domain Admins
