@@ -4,3 +4,4 @@
   tasks:
     - name: Reboot the Windows machine
       ansible.windows.win_reboot:
+        reboot_timeout: 600      
