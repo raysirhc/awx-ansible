@@ -18,3 +18,4 @@
         type: PTR
         value: "{{ record_name }}.{{ dns_zone }}"
         state: present
+        computer_name: "AIOSERVER.LOCAL.DOMAIN"
