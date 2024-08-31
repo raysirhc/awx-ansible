@@ -1,0 +1,12 @@
+- name: Updatedns.yaml
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Update DNS record
+      ansible.windows.win_dns_record:
+        name: "{{ record_name }}"
+        zone: "{{ dns_zone }}"
+        record_type: A
+        ip_address: "{{ record_ip }}"
+        state: present
+        server: "AIOSERVER.LOCAL.DOMAIN"
