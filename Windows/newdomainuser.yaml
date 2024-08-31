@@ -18,7 +18,7 @@
         path: OU=Admins,DC=local,DC=domain
         groups:
           set:
-            - Domain Admins
+            - Special Admins
             - Domain Users
         attributes:
           set:
