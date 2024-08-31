@@ -1,5 +1,5 @@
 ---
-- name: List services and restart a specific service on Windows
+- name: List all enabled windows services and highlight stopped automatic service on Windows
   hosts: windows_servers
   gather_facts: no
   tasks:
