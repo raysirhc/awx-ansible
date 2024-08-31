@@ -14,7 +14,7 @@
     - name: Update PTR record
       community.windows.win_dns_record:
         name: "{{ record_ip2 }}"
-        zone: "{{ ptr_dns_zone }}"
+        zone: "{{ ptr_dns_zone }}.in-addr.arpa"
         type: PTR
         value: "{{ record_name_fqdn }}"
         state: present
