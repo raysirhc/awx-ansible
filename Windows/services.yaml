@@ -2,11 +2,7 @@
 - name: List all enabled windows services and highlight stopped automatic service on Windows
   hosts: windows_servers
   gather_facts: no
-  vars:
-    ansible_skip_tags: always
-    
   tasks:
-    - meta: flush_handlers
     - name: List all services on the Windows machine
       ansible.windows.win_service_info:
       register: services_list
@@ -22,4 +18,12 @@
         msg: "{{ item.display_name }}, {{ item.state }} - {{ item.description }}"
       loop: "{{ services_list.services }}"
       when: item.start_mode != 'disabled' and item.state == 'stopped' and (item.start_mode == 'auto' or item.start_mode == 'delayed')
-      ignore_errors: yes
+
+    - name: Filter enabled services with auto_start or delayed start types
+      set_fact:
+        filtered_services: "{{ services_list.services | selectattr('start_mode', '!=', 'disabled') | selectattr('start_mode', 'in', ['auto', 'delayed']) | list }}"
+
+    - name: Display the filtered services
+      debug:
+        msg: "{{ item.display_name }}"
+      loop: "{{ filtered_services }}"      
