@@ -13,7 +13,7 @@
 
     - name: Update PTR record
       community.windows.win_dns_record:
-        name: "{{ record_ip }}"
+        name: "{{ record_ip2 }}"
         zone: "{{ ptr_dns_zone }}"
         type: PTR
         value: "{{ record_name_fqdn }}"
