@@ -6,6 +6,7 @@
   tasks:
     - name: Ensure user bob is created and use custom credentials to create the user
       microsoft.ad.user:
+        name: yx2 y
         identity: yx2
         firstname: yx2
         surname: y
