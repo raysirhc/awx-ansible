@@ -4,7 +4,7 @@
   tasks:
     - name: Update CNAME DNS record
       community.windows.win_dns_record:
-        name: "{{ cname }}.{{ dns_zone }}"
+        name: "{{ cname }}"
         zone: "{{ dns_zone }}"
         type: CNAME
         value: "{{ target_fqdn }}"
