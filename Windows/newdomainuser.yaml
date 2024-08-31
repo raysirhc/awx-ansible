@@ -1,5 +1,5 @@
 - name: Ensure each account is created
-  ansible.windows.win_domain_user:
+  community.windows.win_domain_user:
     name: '{{ item.name }}'
     upn: '{{ item.name }}@LOCAL.DOMAIN'
     password: '{{ item.password }}'
