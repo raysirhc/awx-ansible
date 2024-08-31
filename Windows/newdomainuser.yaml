@@ -1,0 +1,15 @@
+- name: Ensure each account is created
+  ansible.windows.win_domain_user:
+    name: '{{ item.name }}'
+    upn: '{{ item.name }}@LOCAL.DOMAIN'
+    password: '{{ item.password }}'
+    password_never_expires: false
+    groups:
+    - Domain Admins
+    company: Ansible
+    update_password: on_create
+  loop:
+  - name: Admin User
+    password: SuperSecretPass01
+  - name: Dev User
+    password: '@fvr3IbFBujSRh!3hBg%wgFucD8^x8W5'
