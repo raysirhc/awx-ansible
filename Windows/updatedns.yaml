@@ -6,7 +6,7 @@
       community.windows.win_dns_record:
         name: "{{ record_name }}"
         zone: "{{ dns_zone }}"
-        record_type: A
-        ip_address: "{{ record_ip }}"
+        type: A
+        value: "{{ record_ip }}"
         state: present
-        server: "AIOSERVER.LOCAL.DOMAIN"
+        computer_name: "AIOSERVER.LOCAL.DOMAIN"
