@@ -9,7 +9,7 @@
         type: A
         value: "{{ record_ipA }}.{{ record_ipB }}.{{ record_ipC }}.{{ record_ipD }}"
         state: present
-        computer_name: "AIOSERVER.LOCAL.DOMAIN"
+        computer_name: "{{ dns_server_fqdn }}"
 
     - name: Update PTR record
       community.windows.win_dns_record:
@@ -18,4 +18,4 @@
         type: PTR
         value: "{{ record_name }}.{{ dns_zone }}"
         state: present
-        computer_name: "AIOSERVER.LOCAL.DOMAIN"
+        computer_name: "{{ dns_server_fqdn }}"
