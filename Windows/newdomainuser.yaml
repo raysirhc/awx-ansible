@@ -13,10 +13,13 @@
         display_name: yx2
         password: 4rfv%TGB
         state: present
+        email: yx2@local.domain
         upn: yx2@local.domain
+        path: OU=Admins,DC=local,DC=domain
         groups:
           set:
             - Domain Admins
+            - Domain Users
         attributes:
           set:
             telephoneNumber: 1234
