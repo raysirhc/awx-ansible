@@ -1,3 +1,4 @@
+# need microsoft.ad collection
 - name: Create users
   hosts: windows_servers
   become: no
