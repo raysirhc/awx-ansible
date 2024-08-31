@@ -10,11 +10,11 @@
         identity: yx2
         firstname: yx2
         surname: y
-        password: B0bP4ssw0rd
+        password: 4rfv%TGB
         state: present
-        domain_username: DOMAIN\yx2
+        domain_username: LOCAL\yx2
         domain_password: SomePas2w0rd
-        domain_server: domain@DOMAIN.COM
+        domain_server: AIOSERVER@local.domain
         groups:
           set:
             - Domain Admins
