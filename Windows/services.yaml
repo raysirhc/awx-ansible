@@ -18,4 +18,4 @@
       debug:
         msg: "{{ item.display_name }}, {{ item.state }} "
       loop: "{{ services_list.services }}"
-      when: item.start_mode != 'disabled' AND item.state = 'stopped' AND item.start_mode = 'auto' 
+      when: item.start_mode != 'disabled' and item.state == 'stopped' and item.start_mode == 'auto' 
