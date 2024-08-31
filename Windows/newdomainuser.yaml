@@ -13,7 +13,7 @@
         display_name: '{{ displayname }}'
         password: 4rfv%TGB
         state: present
-        email: '{{ email }}'
+        email: '{{ username }}@local.domain'
         upn: '{{ username }}@local.domain'
         path: OU=Admins,DC=local,DC=domain
         groups:
