@@ -6,15 +6,15 @@
   tasks:
     - name: Ensure user bob is created and use custom credentials to create the user
       microsoft.ad.user:
-        name: yx2
-        identity: yx2
-        firstname: yx2
-        surname: y
-        display_name: yx2
+        name: '{{ username }}'
+        identity: '{{ username }}'
+        firstname: '{{ firstname }}'
+        surname: '{{ lastname }}'
+        display_name: '{{ displayname }}'
         password: 4rfv%TGB
         state: present
-        email: yx2@local.domain
-        upn: yx2@local.domain
+        email: '{{ email }}'
+        upn: '{{ username }}@local.domain'
         path: OU=Admins,DC=local,DC=domain
         groups:
           set:
@@ -22,4 +22,4 @@
             - Domain Users
         attributes:
           set:
-            telephoneNumber: 1234
+            telephoneNumber:
