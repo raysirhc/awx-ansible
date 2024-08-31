@@ -10,3 +10,10 @@
         value: "{{ record_ip }}"
         state: present
         computer_name: "AIOSERVER.LOCAL.DOMAIN"
+
+    - name: Update PTR record
+      community.windows.win_dns_record:
+        name: "{{ record_name }}"
+        zone: "{{ dns_zone }}"
+        type: PTR
+        ip_address: "{{ record_ip }}"
