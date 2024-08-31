@@ -4,7 +4,7 @@
   gather_facts: no
   tasks:
 
-   - name: List all services on the Windows machine
+    - name: List all services on the Windows machine
       ansible.windows.win_service_info:
       register: services_list
 
