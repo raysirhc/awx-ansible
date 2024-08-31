@@ -2,8 +2,11 @@
 - name: List all enabled windows services and highlight stopped automatic service on Windows
   hosts: windows_servers
   gather_facts: no
+  vars:
+    ansible_skip_tags: always
+    
   tasks:
-
+    - meta: flush_handlers
     - name: List all services on the Windows machine
       ansible.windows.win_service_info:
       register: services_list
