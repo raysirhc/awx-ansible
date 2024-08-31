@@ -1,0 +1,10 @@
+---
+- name: List services and restart a specific service on Windows
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Restart the specified service
+      ansible.windows.win_service:
+        name: "{{ service_name }}"
+        state: stopped
+      when: service_name is defined
