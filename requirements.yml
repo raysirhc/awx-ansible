@@ -6,3 +6,4 @@ collections:
   - 'ansible.posix'
   - 'community.mysql'
   - 'ansible.windows'
+  - 'microsoft.ad'
