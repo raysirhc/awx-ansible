@@ -4,9 +4,9 @@
   tasks:
     - name: Update DNS record
       community.windows.win_dns_record:
-        name: "{{ cname }}.{{ dnz_zone }}"
+        name: "{{ cname }}.{{ dns_zone }}"
         zone: "{{ dns_zone }}"
         type: A
-        value: "{{ target_fqdn }}"
+        value: "{{ target_fqdn }}.{{ dns_zone }}"
         state: present
         computer_name: "{{ dns_server_fqdn }}"
