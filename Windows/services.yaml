@@ -8,12 +8,7 @@
       ansible.windows.win_service_info:
       register: services_list
 
-    - name: Display the list of services
+    - name: Display the names of all services
       debug:
-        var: services_list.services
-
-    - name: Restart the specified service
-      ansible.windows.win_service:
-        name: "{{ ansible_pause_result.user_input }}"
-        state: restarted
-      when: ansible_pause_result.user_input is defined
+        msg: "{{ item.display_name }}"
+      loop: "{{ services_list.services }}"
