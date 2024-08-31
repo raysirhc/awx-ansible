@@ -21,7 +21,7 @@
 
     - name: Filter enabled services with auto_start or delayed start types
       set_fact:
-        filtered_services: "{{ services_list.services | selectattr('start_mode', '!=', 'disabled') | selectattr('start_mode', 'in', ['auto', 'delayed']) | list }}"
+        filtered_services: "{{ services_list.services | selectattr('start_mode', '!=', 'disabled') | selectattr('start_mode', 'in', ['auto', 'delayed']) | selectattr ('state', '==', 'stopped' | list }}"
 
     - name: Display the filtered services
       debug:
