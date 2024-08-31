@@ -7,14 +7,14 @@
         name: "{{ record_name }}"
         zone: "{{ dns_zone }}"
         type: A
-        value: "{{ record_ip }}"
+        value: "{{ record_ipA }}.{{ record_ipB }}.{{record_ipC }}.{{ record_ipD }}"
         state: present
         computer_name: "AIOSERVER.LOCAL.DOMAIN"
 
     - name: Update PTR record
       community.windows.win_dns_record:
-        name: "{{ record_ip2 }}"
-        zone: "{{ ptr_dns_zone }}.in-addr.arpa"
+        name: "{{ record_ipA }}.{{ record_ipB }}.{{record_ipC }}.{{ record_ipD }}"
+        zone: "{{record_ipC }}.{{ record_ipB }}.{{ record_ipA }}.in-addr.arpa"
         type: PTR
-        value: "{{ record_name_fqdn }}"
+        value: "{{ record_name }}.{{ dns_zone }}"
         state: present
