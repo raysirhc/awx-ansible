@@ -1,0 +1,22 @@
+- name: Create scheduled task to run a process
+  win_scheduled_task:
+    name: adhoc-task
+    username: SYSTEM
+    actions:
+    - path: PowerShell.exe
+      arguments: |
+        Start-Sleep -Seconds 30  # This isn't required, just here as a demonstration
+        New-Item -Path C:\temp\test -ItemType Directory
+    # Remove this action if the task shouldn't be deleted on completion
+    - path: cmd.exe
+      arguments: /c schtasks.exe /Delete /TN "adhoc-task" /F
+    triggers:
+    - type: registration
+
+- name: Wait for the scheduled task to complete
+  win_scheduled_task_stat:
+    name: adhoc-task
+  register: task_stat
+  until: (task_stat.state is defined and task_stat.state.status != "TASK_STATE_RUNNING") or (task_stat.task_exists == False)
+  retries: 12
+  delay: 10
