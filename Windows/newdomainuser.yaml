@@ -12,7 +12,7 @@
         surname: y
         password: 4rfv%TGB
         state: present
-        domain_username: LOCAL\yx2
+        domain_username: LOCAL\yyx2
         domain_password: SomePas2w0rd
         domain_server: AIOSERVER@local.domain
         groups:
