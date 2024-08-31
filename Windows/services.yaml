@@ -12,10 +12,6 @@
       debug:
         var: services_list.services
 
-    - name: Prompt for the service name to restart
-      pause:
-        prompt: "Please enter the name of the service you want to restart"
-
     - name: Restart the specified service
       ansible.windows.win_service:
         name: "{{ ansible_pause_result.user_input }}"
