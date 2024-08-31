@@ -12,4 +12,3 @@
       debug:
         msg: "{{ item.display_name }}"
       loop: "{{ services_list.services }}"
-      when: item.status != 'disabled'
