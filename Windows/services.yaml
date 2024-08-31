@@ -19,4 +19,4 @@
         msg: "{{ item.display_name }}, {{ item.state }} - {{ item.description }}"
       loop: "{{ services_list.services }}"
       when: item.start_mode != 'disabled' and item.state == 'stopped' and (item.start_mode == 'auto' or item.start_mode == 'delayed')
-      verbosity: 0
+      ignore_errors: yes
