@@ -1,17 +1,22 @@
-# Need Microsoft.ad.user collection
-- name: Ensure user bob is created and use custom credentials to create the user
-  microsoft.ad.user:
-    identity: yx2
-    firstname: yx2
-    surname: y
-    password: B0bP4ssw0rd
-    state: present
-    domain_username: DOMAIN\yx2
-    domain_password: SomePas2w0rd
-    domain_server: domain@DOMAIN.COM
-    groups:
-      set:
-        - Domain Admins
-    attributes:
-      set:
-        telephoneNumber: 1234
+- name: Create users
+  hosts: windows_servers
+  become: no
+  gather_facts: no
+
+  tasks:
+  - name: Ensure user bob is created and use custom credentials to create the user
+    microsoft.ad.user:
+      identity: yx2
+      firstname: yx2
+      surname: y
+      password: B0bP4ssw0rd
+      state: present
+      domain_username: DOMAIN\yx2
+      domain_password: SomePas2w0rd
+      domain_server: domain@DOMAIN.COM
+      groups:
+        set:
+          - Domain Admins
+      attributes:
+        set:
+          telephoneNumber: 1234
