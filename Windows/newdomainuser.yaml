@@ -10,7 +10,7 @@
         identity: yx2
         firstname: yx2
         surname: y
-        display_name
+        display_name: yx2
         password: 4rfv%TGB
         state: present
         upn: yx2@local.domain
