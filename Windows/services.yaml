@@ -4,11 +4,12 @@
   gather_facts: no
   tasks:
 
-    - name: List all services on the Windows machine
+   - name: List all services on the Windows machine
       ansible.windows.win_service_info:
       register: services_list
 
-    - name: Display the names of all services
+    - name: Display the names of enabled services only
       debug:
         msg: "{{ item.display_name }}"
       loop: "{{ services_list.services }}"
+      when: item.start_type != 'DISABLED'
