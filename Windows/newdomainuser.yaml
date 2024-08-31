@@ -1,3 +1,4 @@
+# Need Microsoft.ad.user collection
 - name: Ensure user bob is created and use custom credentials to create the user
   microsoft.ad.user:
     identity: yx2
