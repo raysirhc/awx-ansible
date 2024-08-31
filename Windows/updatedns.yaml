@@ -16,4 +16,4 @@
         name: "{{ record_name }}"
         zone: "{{ dns_zone }}"
         type: PTR
-        ip_address: "{{ record_ip }}"
+        value: "{{ record_ip }}"
