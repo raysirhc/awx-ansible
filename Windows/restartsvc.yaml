@@ -1,0 +1,23 @@
+---
+- name: List services and restart a specific service on Windows
+  hosts: windows
+  gather_facts: no
+  tasks:
+
+    - name: List all services on the Windows machine
+      ansible.windows.win_service_info:
+      register: services_list
+
+    - name: Display the list of services
+      debug:
+        var: services_list.services
+
+    - name: Prompt for the service name to restart
+      pause:
+        prompt: "Please enter the name of the service you want to restart"
+
+    - name: Restart the specified service
+      ansible.windows.win_service:
+        name: "{{ ansible_pause_result.user_input }}"
+        state: restarted
+      when: ansible_pause_result.user_input is defined
