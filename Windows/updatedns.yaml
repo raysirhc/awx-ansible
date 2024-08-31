@@ -13,7 +13,7 @@
 
     - name: Update PTR record
       community.windows.win_dns_record:
-        name: "{{ record_ipA }}.{{ record_ipB }}.{{record_ipC }}.{{ record_ipD }}"
+        name: "{{ record_ipD }}"
         zone: "{{record_ipC }}.{{ record_ipB }}.{{ record_ipA }}.in-addr.arpa"
         type: PTR
         value: "{{ record_name }}.{{ dns_zone }}"
