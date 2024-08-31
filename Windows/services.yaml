@@ -16,6 +16,6 @@
       
     - name: Display the names of enabled automatic services only but stopped
       debug:
-        msg: "{{ item.display_name }}, {{ item.state }} {{ item.description }} "
+        msg: "{{ item.display_name }}, {{ item.state }}, {{ item.description }}"
       loop: "{{ services_list.services }}"
       when: item.start_mode != 'disabled' and item.state == 'stopped' and (item.start_mode == 'auto' or item.start_mode == 'delayed')
