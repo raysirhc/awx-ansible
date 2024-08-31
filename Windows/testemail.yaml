@@ -1,0 +1,16 @@
+---
+- name: Test email sent
+  hosts: linux
+  gather_facts: no
+  tasks:
+    - name: Sending an email
+      community.general.mail:
+        host: mail.smtp2go.com
+        port: 2525
+        username: xdeathz@gmail.com
+        password: -
+        sender: chrisyar@outlook.com
+        to: yar_yu_xiang@hotmail.com
+        subject: Ansible-report
+        body: test email
+      delegate_to: localhost
