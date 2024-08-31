@@ -10,5 +10,6 @@
 
     - name: Display the names of enabled services only
       debug:
-        msg: "{{ item.display_name }}"
+        msg: "{{ item.display_name }}, {{ item.description }} "
       loop: "{{ services_list.services }}"
+      when: {{ item.start_mode }} != 'disabled'
