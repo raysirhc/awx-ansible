@@ -1,11 +1,10 @@
 # need microsoft.ad collection
-- name: Create users
+- name: Create user
   hosts: windows_servers
   become: no
   gather_facts: no
-
   tasks:
-    - name: Ensure user bob is created and use custom credentials to create the user
+    - name: Ensure defined user is created 
       microsoft.ad.user:
         name: '{{ username }}'
         identity: '{{ username }}'
