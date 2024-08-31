@@ -1,6 +1,6 @@
 ---
 - name: List services and restart a specific service on Windows
-  hosts: windows_server
+  hosts: windows_servers
   gather_facts: no
   tasks:
 
