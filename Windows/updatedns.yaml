@@ -3,7 +3,7 @@
   gather_facts: no
   tasks:
     - name: Update DNS record
-      ansible.windows.win_dns_record:
+      community.windows.win_dns_record:
         name: "{{ record_name }}"
         zone: "{{ dns_zone }}"
         record_type: A
