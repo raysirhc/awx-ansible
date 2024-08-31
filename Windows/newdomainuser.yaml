@@ -1,15 +1,16 @@
-- name: Ensure each account is created
-  community.windows.win_domain_user:
-    name: '{{ item.name }}'
-    upn: '{{ item.name }}@LOCAL.DOMAIN'
-    password: '{{ item.password }}'
-    password_never_expires: false
+- name: Ensure user bob is created and use custom credentials to create the user
+  microsoft.ad.user:
+    identity: yx2
+    firstname: yx2
+    surname: y
+    password: B0bP4ssw0rd
+    state: present
+    domain_username: DOMAIN\yx2
+    domain_password: SomePas2w0rd
+    domain_server: domain@DOMAIN.COM
     groups:
-    - Domain Admins
-    company: Ansible
-    update_password: on_create
-  loop:
-  - name: AdminUser
-    password: SuperSecretPass01
-  - name: DevUser
-    password: '@fvr3IbFBujSRh!3hBg%wgFucD8^x8W5'
+      set:
+        - Domain Admins
+    attributes:
+      set:
+        telephoneNumber: 1234
