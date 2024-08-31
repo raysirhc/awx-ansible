@@ -7,6 +7,6 @@
         name: "{{ cname }}.{{ dns_zone }}"
         zone: "{{ dns_zone }}"
         type: A
-        value: "{{ target_fqdn }}.{{ dns_zone }}"
+        value: "{{ target_fqdn }}"
         state: present
         computer_name: "{{ dns_server_fqdn }}"
