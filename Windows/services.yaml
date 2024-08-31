@@ -13,17 +13,11 @@
       loop: "{{ services_list.services }}"
       when: item.start_mode != 'disabled'
       
-    - name: Display the names of enabled automatic services only but stopped
-      debug:
-        msg: "{{ item.display_name }}, {{ item.state }} - {{ item.description }}"
-      loop: "{{ services_list.services }}"
-      when: item.start_mode != 'disabled' and item.state == 'stopped' and (item.start_mode == 'auto' or item.start_mode == 'delayed')
-
     - name: Filter enabled services with auto_start or delayed start types
       set_fact:
         filtered_services: "{{ services_list.services | selectattr('start_mode', '!=', 'disabled') | selectattr('start_mode', 'in', ['auto', 'delayed']) | selectattr ('state', '==', 'stopped') | list }}"
 
     - name: Display the filtered services
       debug:
-        msg: "{{ item.display_name }}"
+        msg: "{{ item.display_name }}, {{ item.state }} - {{ item.description }}"
       loop: "{{ filtered_services }}"      
