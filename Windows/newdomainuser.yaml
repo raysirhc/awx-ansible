@@ -14,7 +14,7 @@
         state: present
         domain_username: LOCAL\yyx2
         domain_password: SomePas2w0rd
-        domain_server: AIOSERVER@local.domain
+        domain_server: 192.168.110.87
         groups:
           set:
             - Domain Admins
