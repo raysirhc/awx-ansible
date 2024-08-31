@@ -1,0 +1,17 @@
+---
+- name: Send email
+  hosts: local
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Sending an email
+      community.general.mail:
+        host: smtp.domain
+        port: 25
+        username: abc@email.domain
+        password: abc
+        sender: sender@email.domain
+        to: recipient@email.domain
+        subject: Ansible-report
+        body: test email
+      delegate_to: localhost
