@@ -1,6 +1,7 @@
 ---
 - name: Unlock domain user and change password
   hosts: windows_servers
+  gather_facts: no
   tasks:
     - name: Unlock the domain user
       ansible.windows.win_user:
