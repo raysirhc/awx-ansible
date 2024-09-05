@@ -22,6 +22,8 @@
       when: user_unlocked.changed
 
     - name: Output username and password to a JSON file on local machine
+      hosts: local
+      connection: local
       local_action:
         module: copy
         content: |
