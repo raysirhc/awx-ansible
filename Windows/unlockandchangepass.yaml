@@ -1,0 +1,32 @@
+---
+- name: Unlock domain user and change password
+  hosts: windows_servers
+  tasks:
+    - name: Unlock the domain user
+      ansible.windows.win_user:
+        name: "{{ domain_user }}"
+        password_never_expires: false
+        account_locked: false
+      register: user_unlocked
+
+    - name: Generate a new password for the user
+      set_fact:
+        new_password: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters,digits') }}"
+
+    - name: Change the domain user password
+      win_user:
+        name: "{{ domain_user }}"
+        password: "{{ new_password }}"
+        update_password: always
+      when: user_unlocked.changed
+
+    - name: Output username and password to a JSON file on local machine
+      local_action:
+        module: copy
+        content: |
+          {
+            "username": "{{ domain_user }}",
+            "password": "{{ new_password }}"
+          }
+        dest: "/home/sysowner/output.json"
+
