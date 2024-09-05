@@ -13,3 +13,6 @@ $Headers = @{
 }
 
 Invoke-RestMethod -Uri $URL -Method Post -Headers $Headers -Body $Body
+
+#return cert check
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = $null
