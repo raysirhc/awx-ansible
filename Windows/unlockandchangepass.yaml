@@ -28,7 +28,7 @@
         saved_new_password: "{{ new_password }}"
 
 - name: Output username and password to a JSON file
-  hosts: localhost
+  hosts: local
   gather_facts: no
   tasks:
     - name: Output username and password to a JSON file on local machine
