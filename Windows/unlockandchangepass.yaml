@@ -29,7 +29,6 @@
 
 - name: Output username and password to a JSON file
   hosts: local
-    vars: ansible_port=22
   gather_facts: no
   tasks:
     - name: Output username and password to a JSON file on local machine
