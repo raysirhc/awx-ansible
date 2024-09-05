@@ -13,7 +13,7 @@
 
     - name: Generate a new password for the user
       set_fact:
-        new_password: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters,digits,punctuation') }}"
+        new_password: "{{ lookup('community.general.random_string', length=12, min_lower=1, min_upper=1, min_numeric=1, min_special=1, override_special='-_=+!#$()[]') }}"
 
     - name: Change the domain user password
       ansible.windows.win_user:
