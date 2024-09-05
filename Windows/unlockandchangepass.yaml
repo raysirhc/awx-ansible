@@ -20,10 +20,12 @@
         password: "{{ new_password }}"
         update_password: always
       when: user_unlocked.changed
-
+- name: Send email
+  hosts: local
+  connection: local
+  gather_facts: no
+  tasks:
     - name: Output username and password to a JSON file on local machine
-      hosts: local
-      connection: local
       local_action:
         module: copy
         content: |
