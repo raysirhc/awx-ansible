@@ -22,12 +22,10 @@
         update_password: always
       when: user_unlocked.changed
 
-    - name: Save the domain_user and new_password as facts for later use
+    - name: Save the domain_user and new_password as facts
       set_fact:
         saved_domain_user: "{{ domain_user }}"
         saved_new_password: "{{ new_password }}"
-      delegate_to: localhost
-      run_once: true
 
 - name: Output username and password to a JSON file
   hosts: localhost
@@ -37,7 +35,7 @@
       copy:
         content: |
           {
-            "username": "{{ saved_domain_user }}",
-            "password": "{{ saved_new_password }}"
+            "username": "{{ hostvars[groups['windows_servers'][0]].saved_domain_user }}",
+            "password": "{{ hostvars[groups['windows_servers'][0]].saved_new_password }}"
           }
         dest: "/home/sysowner/output.json"
