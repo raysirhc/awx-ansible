@@ -26,6 +26,8 @@
       set_fact:
         saved_domain_user: "{{ domain_user }}"
         saved_new_password: "{{ new_password }}"
+      delegate_to: local
+      run_once: true
 
 - name: Output username and password to a JSON file
   hosts: local
@@ -35,7 +37,7 @@
       copy:
         content: |
           {
-            "username": "{{ hostvars['windows_servers'].saved_domain_user }}",
-            "password": "{{ hostvars['windows_servers'].saved_new_password }}"
+            "username": "{{ saved_domain_user }}",
+            "password": "{{ saved_new_password }}"
           }
         dest: "/home/sysowner/output.json"
