@@ -8,12 +8,12 @@
         name: "{{ domain_user }}"
         password_never_expires: false
         account_locked: false
-        account_disabled : false
+        account_disabled: false
       register: user_unlocked
 
     - name: Generate a new password for the user
       set_fact:
-        new_password: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters,digits') }}"
+        new_password: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters,digits,punctuation') }}"
 
     - name: Change the domain user password
       ansible.windows.win_user:
@@ -22,7 +22,12 @@
         update_password: always
       when: user_unlocked.changed
 
-- name: Send email
+    - name: Save the domain_user and new_password as facts for later use
+      set_fact:
+        saved_domain_user: "{{ domain_user }}"
+        saved_new_password: "{{ new_password }}"
+
+- name: Output username and password to a JSON file
   hosts: localhost
   gather_facts: no
   tasks:
@@ -30,7 +35,7 @@
       copy:
         content: |
           {
-            "username": "{{ domain_user }}",
-            "password": "{{ new_password }}"
+            "username": "{{ hostvars['windows_servers'].saved_domain_user }}",
+            "password": "{{ hostvars['windows_servers'].saved_new_password }}"
           }
         dest: "/home/sysowner/output.json"
