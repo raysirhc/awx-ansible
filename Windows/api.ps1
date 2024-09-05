@@ -1,3 +1,6 @@
+#skip cert check
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+
 #powershell code
 
 $URL = "https://awx.poco.stream/api/integrations/feujrfonyzdbu6g5"
