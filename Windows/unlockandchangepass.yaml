@@ -30,7 +30,7 @@
       run_once: true
 
 - name: Output username and password to a JSON file
-  hosts: local
+  hosts: localhost
   gather_facts: no
   tasks:
     - name: Output username and password to a JSON file on local machine
