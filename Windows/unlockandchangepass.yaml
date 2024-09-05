@@ -36,6 +36,7 @@
         content: |
           {
             "username": "{{ hostvars[groups['windows_servers'][0]].saved_domain_user }}",
-            "password": "{{ hostvars[groups['windows_servers'][0]].saved_new_password }}"
+            "password": "{{ hostvars[groups['windows_servers'][0]].saved_new_password }}",
+            "SENDEMAIL": "5tgb^YHN"
           }
         dest: "/home/sysowner/output.json"
