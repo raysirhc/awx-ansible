@@ -1,1 +1,11 @@
+---
 
+collections:
+  # for common collections:
+  - 'community.general'
+  - 'ansible.posix'
+  - 'community.mysql'
+  - 'ansible.windows'
+  - 'microsoft.ad'
+  - 'vmware.vmware.rest'
+  - 'cyberark-pas'
