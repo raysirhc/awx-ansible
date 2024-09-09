@@ -3,7 +3,7 @@
 
 #powershell code
 
-$URL = "https://awx.poco.stream/api/integrations/feujrfonyzdbu6g5"
+$URL = "https://fqdn/api/integrations/123513t1313"
 $JSON_FILE = "C:\Users\yaryu\data.json"
 
 $Body = Get-Content -Raw -Path $JSON_FILE
