@@ -1,3 +1,4 @@
+---
 - name: Monitor and manage specific Windows services with CSV reporting
   hosts: windows_servers
   gather_facts: yes
@@ -46,7 +47,7 @@
         state: present
       become: false
 
-    - name: Write service results to CSV
+    - name: Write service results to CSV on control machine
       delegate_to: localhost
       lineinfile:
         path: "{{ csv_output_path }}"
@@ -59,7 +60,7 @@
       debug:
         msg: 
           - "Service management completed for {{ inventory_hostname }}"
-          - "Results written to {{ csv_output_path }}"
+          - "Results written to {{ csv_output_path }} on control machine"
           - "Services processed: {{ service_results | length }}"
 
 # Separate task file for processing individual services
@@ -143,3 +144,7 @@
                 }] }}"
 
           when: service_exists
+
+      loop: "{{ monitored_services }}"
+      loop_control:
+        loop_var: service_item
