@@ -1,4 +1,3 @@
----
 - name: Monitor and manage specific Windows services with CSV reporting
   hosts: windows_servers
   gather_facts: yes
