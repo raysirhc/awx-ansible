@@ -1,4 +1,5 @@
-- name: Monitor and manage specific Windows services with CSV reporting
+---
+- name: Check status of specific Windows services (Read-Only)
   hosts: windows_servers
   gather_facts: yes
   vars:
@@ -6,17 +7,18 @@
     monitored_services:
       - name: "Spooler"
         display_name: "Print Spooler"
-        installation_script: "install_print_spooler.ps1"
       - name: "Themes"
         display_name: "Themes"
-        installation_script: "install_themes.ps1"
       - name: "BITS"
         display_name: "Background Intelligent Transfer Service"
-        installation_script: "install_bits.ps1"
+      - name: "W32Time"
+        display_name: "Windows Time"
+      - name: "Winmgmt"
+        display_name: "Windows Management Instrumentation"
       # Add more services as needed
     
     # CSV file path (will be created on the Ansible control machine)
-    csv_output_path: "/home/csv/check_service_status_report_{{ ansible_date_time.date }}.csv"
+    csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
     
     # Results collection list
     service_results: []
@@ -30,32 +32,44 @@
       set_fact:
         service_results: []
 
-    - name: Check if service exists
+    - name: Check status of each monitored service
       set_fact:
+        service_results: "{{ service_results + [current_service_status] }}"
+      vars:
         service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+        found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
+        current_service_status: "{{
+          {
+            'name': item.name,
+            'display_name': item.display_name,
+            'status': (found_service.state if service_exists else 'Not Found'),
+            'start_mode': (found_service.start_mode if service_exists else 'N/A'),
+            'description': (found_service.description if service_exists else 'Service not installed')
+          }
+        }}"
       loop: "{{ monitored_services }}"
-      register: service_existence_check
+      when: service_exists or not service_exists  # Always execute
 
-    - name: Get service details if it exists
-      set_fact:
-        current_service: "{{ all_services.services | selectattr('name', '==', service_item.name) | first }}"
-      when: service_exists
+    - name: Display current service status
+      debug:
+        msg: "{{ item.display_name }} ({{ item.name }}): {{ item.status }} - Start Mode: {{ item.start_mode }}"
+      loop: "{{ service_results }}"
 
     - name: Create CSV header on control machine
       delegate_to: localhost
       run_once: true
       lineinfile:
         path: "{{ csv_output_path }}"
-        line: "Hostname,ServiceName,DisplayName,Status,ActionTaken,Timestamp"
+        line: "Hostname,ServiceName,DisplayName,Status,StartMode,Description,Timestamp"
         create: yes
         state: present
       become: false
 
-    - name: Write service results to CSV on control machine
+    - name: Write service status to CSV on control machine
       delegate_to: localhost
       lineinfile:
         path: "{{ csv_output_path }}"
-        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.action }},{{ ansible_date_time.iso8601 }}"
+        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},\"{{ item.description }}\",{{ ansible_date_time.iso8601 }}"
         state: present
       loop: "{{ service_results }}"
       become: false
@@ -63,6 +77,15 @@
     - name: Display summary
       debug:
         msg: 
-          - "Service management completed for {{ inventory_hostname }}"
+          - "Service status check completed for {{ inventory_hostname }}"
           - "Results written to {{ csv_output_path }} on control machine"
-          - "Services processed: {{ service_results | length }}"
+          - "Services checked: {{ service_results | length }}"
+          - "Running services: {{ service_results | selectattr('status', '==', 'running') | list | length }}"
+          - "Stopped services: {{ service_results | selectattr('status', '==', 'stopped') | list | length }}"
+          - "Missing services: {{ service_results | selectattr('status', '==', 'Not Found') | list | length }}"
+
+    - name: Show services that are stopped or missing
+      debug:
+        msg: "⚠️  {{ item.display_name }} ({{ item.name }}): {{ item.status }}"
+      loop: "{{ service_results }}"
+      when: item.status != 'running'
