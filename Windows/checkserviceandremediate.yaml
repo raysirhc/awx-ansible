@@ -143,7 +143,3 @@
                 }] }}"
 
           when: service_exists
-
-      loop: "{{ monitored_services }}"
-      loop_control:
-        loop_var: service_item
