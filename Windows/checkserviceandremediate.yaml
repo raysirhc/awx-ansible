@@ -48,7 +48,7 @@
       run_once: true
       lineinfile:
         path: "{{ csv_output_path }}"
-        line: "Hostname,Service Name,Display Name,Status,Action Taken,Timestamp"
+        line: "Hostname,Service_Name,Display_Name,Status,Action_Taken,Timestamp"
         create: yes
         state: present
       become: false
