@@ -36,6 +36,11 @@
       loop: "{{ monitored_services }}"
       register: service_existence_check
 
+    - name: Get service details if it exists
+      set_fact:
+        current_service: "{{ all_services.services | selectattr('name', '==', service_item.name) | first }}"
+      when: service_exists
+
     - name: Create CSV header on control machine
       delegate_to: localhost
       run_once: true
