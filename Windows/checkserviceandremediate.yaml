@@ -149,7 +149,6 @@
       loop_control:
         loop_var: service_item
 
----
 # Optional: Separate task file (process_service.yml)
 # If you prefer to keep tasks modular, create this as a separate file:
 
