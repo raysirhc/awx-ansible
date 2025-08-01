@@ -1,0 +1,54 @@
+ - name: Check if service exists
+   set_fact:
+     service_exists: "{{ all_services.services | selectattr('name', '==', service_item.name) | list | length > 0 }}"
+ 
+ - name: Get service details if it exists
+   set_fact:
+     current_service: "{{ all_services.services | selectattr('name', '==', service_item.name) | first }}"
+   when: service_exists
+ 
+ - name: Handle missing service
+   block:
+     - name: Run installation script for missing service
+       ansible.windows.win_shell: |
+         if (Test-Path "{{ service_item.installation_script }}") {
+           & "{{ service_item.installation_script }}"
+           Write-Output "Installation script executed"
+         } else {
+           Write-Output "Installation script not found: {{ service_item.installation_script }}"
+           exit 1
+         }
+       register: install_result
+       failed_when: false
+ 
+     - name: Record installation result
+       set_fact:
+         service_results: "{{ service_results + [{
+           'name': service_item.name,
+           'display_name': service_item.display_name,
+           'status': 'Not Installed',
+           'action': 'Installation attempted - ' + (install_result.stdout | default('Failed'))
+         }] }}"
+ 
+   when: not service_exists
+ 
+ - name: Handle existing service
+   block:
+     - name: Start service if stopped
+       ansible.windows.win_service:
+         name: "{{ service_item.name }}"
+         state: started
+       register: start_result
+       when: current_service.state == 'stopped'
+       failed_when: false
+ 
+     - name: Record service result
+       set_fact:
+         service_results: "{{ service_results + [{
+           'name': service_item.name,
+           'display_name': service_item.display_name,
+           'status': current_service.state,
+           'action': ('Started' if start_result.changed else 'Already running')
+         }] }}"
+ 
+   when: service_exists
