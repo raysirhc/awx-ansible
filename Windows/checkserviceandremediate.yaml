@@ -31,11 +31,18 @@
       set_fact:
         service_results: []
 
+    - name: Check if service exists
+      set_fact:
+        service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+      loop: "{{ monitored_services }}"
+      register: service_existence_check
+
     - name: Process each monitored service
-      include_tasks: process_service.yml
+      include_tasks: process_individual_service.yml
       loop: "{{ monitored_services }}"
       loop_control:
         loop_var: service_item
+        index_var: service_index
 
     - name: Create CSV header on control machine
       delegate_to: localhost
@@ -63,88 +70,80 @@
           - "Results written to {{ csv_output_path }} on control machine"
           - "Services processed: {{ service_results | length }}"
 
-# Separate task file for processing individual services
-# This would typically be in a separate file called 'process_service.yml'
-# For this example, I'm including it inline using a block
+# Individual service processing tasks (inline for simplicity)
+# In production, you might want to put this in a separate file called 'process_individual_service.yml'
 
-    - name: Process individual service
-      block:
-        - name: Check if service exists
-          set_fact:
-            service_exists: "{{ all_services.services | selectattr('name', '==', service_item.name) | list | length > 0 }}"
+  - name: Check if current service exists
+    set_fact:
+      service_exists: "{{ all_services.services | selectattr('name', '==', service_item.name) | list | length > 0 }}"
 
-        - name: Get service details if it exists
-          set_fact:
-            current_service: "{{ all_services.services | selectattr('name', '==', service_item.name) | first }}"
-          when: service_exists
+  - name: Get service details if it exists
+    set_fact:
+      current_service: "{{ all_services.services | selectattr('name', '==', service_item.name) | first }}"
+    when: service_exists
 
-        - name: Handle missing service
-          block:
-            - name: Run installation script for missing service
-              ansible.windows.win_shell: |
-                # Check if installation script exists
-                if (Test-Path "{{ service_item.installation_script }}") {
-                  & "{{ service_item.installation_script }}"
-                  Write-Output "Installation script executed"
-                } else {
-                  Write-Output "Installation script not found: {{ service_item.installation_script }}"
-                  exit 1
-                }
-              register: install_result
-              failed_when: false
+  - name: Handle missing service
+    block:
+      - name: Run installation script for missing service
+        ansible.windows.win_shell: |
+          if (Test-Path "{{ service_item.installation_script }}") {
+            & "{{ service_item.installation_script }}"
+            Write-Output "Installation script executed"
+          } else {
+            Write-Output "Installation script not found: {{ service_item.installation_script }}"
+            exit 1
+          }
+        register: install_result
+        failed_when: false
 
-            - name: Record installation attempt result
-              set_fact:
-                service_results: "{{ service_results + [{
-                  'name': service_item.name,
-                  'display_name': service_item.display_name,
-                  'status': 'Not Installed',
-                  'action': 'Installation attempted - ' + (install_result.stdout | default('Failed'))
-                }] }}"
+      - name: Record installation attempt result
+        set_fact:
+          service_results: "{{ service_results + [{
+            'name': service_item.name,
+            'display_name': service_item.display_name,
+            'status': 'Not Installed',
+            'action': 'Installation attempted - ' + (install_result.stdout | default('Failed'))
+          }] }}"
 
-            - name: Re-check services after installation
-              ansible.windows.win_service_info:
-              register: updated_services
-              when: install_result.rc == 0
+      - name: Re-check services after installation
+        ansible.windows.win_service_info:
+        register: updated_services
+        when: install_result.rc == 0
 
-            - name: Update service status after installation
-              set_fact:
-                service_exists: "{{ updated_services.services | selectattr('name', '==', service_item.name) | list | length > 0 }}"
-                current_service: "{{ updated_services.services | selectattr('name', '==', service_item.name) | first }}"
-              when: 
-                - install_result.rc == 0
-                - updated_services is defined
+      - name: Update service status after installation
+        set_fact:
+          service_exists: "{{ updated_services.services | selectattr('name', '==', service_item.name) | list | length > 0 }}"
+          current_service: "{{ updated_services.services | selectattr('name', '==', service_item.name) | first }}"
+        when: 
+          - install_result.rc == 0
+          - updated_services is defined
 
-          when: not service_exists
+    when: not service_exists
 
-        - name: Handle existing service
-          block:
-            - name: Check if service is stopped
-              set_fact:
-                service_stopped: "{{ current_service.state == 'stopped' }}"
+  - name: Handle existing service
+    block:
+      - name: Check if service is stopped
+        set_fact:
+          service_stopped: "{{ current_service.state == 'stopped' }}"
 
-            - name: Start service if it's stopped
-              ansible.windows.win_service:
-                name: "{{ service_item.name }}"
-                state: started
-              register: start_result
-              when: service_stopped
-              failed_when: false
+      - name: Start service if it's stopped
+        ansible.windows.win_service:
+          name: "{{ service_item.name }}"
+          state: started
+        register: start_result
+        when: service_stopped
+        failed_when: false
 
-            - name: Record service management result
-              set_fact:
-                service_results: "{{ service_results + [{
-                  'name': service_item.name,
-                  'display_name': service_item.display_name,
-                  'status': current_service.state,
-                  'action': ('Started successfully' if (service_stopped and start_result.changed) 
-                           else 'Start failed' if (service_stopped and start_result.failed)
-                           else 'Already running' if current_service.state == 'running'
-                           else 'No action needed')
-                }] }}"
+      - name: Record service management result
+        set_fact:
+          service_results: "{{ service_results + [{
+            'name': service_item.name,
+            'display_name': service_item.display_name,
+            'status': current_service.state,
+            'action': ('Started successfully' if (service_stopped and start_result.changed) 
+                     else 'Start failed' if (service_stopped and start_result.failed)
+                     else 'Already running' if current_service.state == 'running'
+                     else 'No action needed')
+          }] }}"
 
-          when: service_exists
-
-      loop: "{{ monitored_services }}"
-      loop_control:
-        loop_var: service_item
+    when: service_exists
