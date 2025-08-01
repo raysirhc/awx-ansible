@@ -16,7 +16,7 @@
       # Add more services as needed
     
     # CSV file path (will be created on the Ansible control machine)
-    csv_output_path: "/csv/service_status_report_{{ ansible_date_time.date }}.csv"
+    csv_output_path: "/home/csv/service_status_report_{{ ansible_date_time.date }}.csv"
     
     # Results collection list
     service_results: []
