@@ -1,0 +1,63 @@
+- name: Monitor and manage specific Windows services with CSV reporting
+  hosts: windows_servers
+  gather_facts: yes
+  vars:
+    # Define the services you want to monitor
+    monitored_services:
+      - name: "Spooler"
+        display_name: "Print Spooler"
+        installation_script: "install_print_spooler.ps1"
+      - name: "Themes"
+        display_name: "Themes"
+        installation_script: "install_themes.ps1"
+      - name: "BITS"
+        display_name: "Background Intelligent Transfer Service"
+        installation_script: "install_bits.ps1"
+      # Add more services as needed
+    
+    # CSV file path (will be created on the Ansible control machine)
+    csv_output_path: "/home/csv/service_status_report_{{ ansible_date_time.date }}.csv"
+    
+    # Results collection list
+    service_results: []
+
+  tasks:
+    - name: Get all services information
+      ansible.windows.win_service_info:
+      register: all_services
+
+    - name: Initialize service results list
+      set_fact:
+        service_results: []
+
+    - name: Check if service exists
+      set_fact:
+        service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+      loop: "{{ monitored_services }}"
+      register: service_existence_check
+
+    - name: Create CSV header on control machine
+      delegate_to: localhost
+      run_once: true
+      lineinfile:
+        path: "{{ csv_output_path }}"
+        line: "Hostname,ServiceName,DisplayName,Status,ActionTaken,Timestamp"
+        create: yes
+        state: present
+      become: false
+
+    - name: Write service results to CSV on control machine
+      delegate_to: localhost
+      lineinfile:
+        path: "{{ csv_output_path }}"
+        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.action }},{{ ansible_date_time.iso8601 }}"
+        state: present
+      loop: "{{ service_results }}"
+      become: false
+
+    - name: Display summary
+      debug:
+        msg: 
+          - "Service management completed for {{ inventory_hostname }}"
+          - "Results written to {{ csv_output_path }} on control machine"
+          - "Services processed: {{ service_results | length }}"
