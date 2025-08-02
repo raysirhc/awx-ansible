@@ -1,0 +1,71 @@
+---
+- name: Generate Services CSV with Unique Key
+  hosts: windows_hosts
+  gather_facts: yes
+  vars:
+    csv_file: "/csv/check_services_{{ ansible_date_time.epoch }}.csv"
+  tasks:
+    - name: Get Windows services information
+      win_service_info:
+        name: "{{ item }}"
+      loop:
+        - Spooler
+        - Themes
+        - BITS
+        - W32Time
+        - SplunkUniversalForwarder
+      register: service_info
+      
+    - name: Prepare service data with unique key
+      set_fact:
+        services_data: "{{ services_data | default([]) + [service_item] }}"
+      vars:
+        service_item:
+          hostname: "{{ ansible_hostname }}"
+          service_name: "{{ item.name }}"
+          display_name: "{{ item.display_name | default('N/A') }}"
+          status: "{{ item.state | default('Missing') }}"
+          start_mode: "{{ item.start_mode | default('NA') }}"
+          timestamp: "{{ ansible_date_time.iso8601 }}"
+          unique_key: "{{ ansible_hostname }}|{{ item.name }}"
+      loop: "{{ service_info.results }}"
+      when: item.exists is defined
+      
+    - name: Create CSV header
+      lineinfile:
+        path: "{{ csv_file }}"
+        line: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp,unique_key"
+        create: yes
+        state: present
+      delegate_to: localhost
+      run_once: true
+      
+    - name: Write service data to CSV
+      lineinfile:
+        path: "{{ csv_file }}"
+        line: "{{ item.hostname }},{{ item.service_name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
+        state: present
+      loop: "{{ services_data }}"
+      delegate_to: localhost
+
+    - name: Upload CSV to Directus via API
+      uri:
+        url: "{{ directus_url }}/files"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ directus_token }}"
+          Content-Type: "multipart/form-data"
+        body_format: form-multipart
+        body:
+          file: "{{ csv_file }}"
+          title: "Services Report {{ ansible_date_time.date }}"
+          folder: "{{ directus_folder_id | default(omit) }}"
+      delegate_to: localhost
+      run_once: true
+
+# Alternative: Using template module for more control
+- name: Generate CSV using template
+  template:
+    src: services.csv.j2
+    dest: "{{ csv_file }}"
+  delegate_to: localhost
