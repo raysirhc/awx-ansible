@@ -13,8 +13,8 @@
         display_name: "Background Intelligent Transfer Service"
       - name: "W32Time"
         display_name: "Windows Time"
-      - name: "Winmgmt"
-        display_name: "Windows Management Instrumentation"
+      - name: "SplunkUniversalForwarder"
+        display_name: "Splunk Universal Forwarder"
       # Add more services as needed
     
     # CSV file path (will be created on the Ansible control machine)
