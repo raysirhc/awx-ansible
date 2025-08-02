@@ -17,11 +17,6 @@
       register: service_info
       failed_when: false  # Don't fail if service doesn't exist
       
-    - name: Debug service info (optional - remove in production)
-      debug:
-        msg: "Service {{ item.item }}: {{ item.services | default('Not found') }}"
-      loop: "{{ service_info.results }}"
-      
     - name: Prepare service data with unique key
       set_fact:
         services_data: "{{ services_data | default([]) + [service_item] }}"
