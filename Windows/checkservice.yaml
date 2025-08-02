@@ -6,7 +6,7 @@
     csv_file: "/csv/check_services_{{ ansible_date_time.epoch }}.csv"
   tasks:
     - name: Get Windows services information
-      win_service_info:
+      ansible.windows.win_service_info:
         name: "{{ item }}"
       loop:
         - Spooler
