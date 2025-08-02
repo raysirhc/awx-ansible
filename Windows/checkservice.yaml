@@ -1,54 +1,91 @@
 ---
-- name: Generate Services CSV with Unique Key
+- name: Check status of specific Windows services (Read-Only)
   hosts: windows_servers
   gather_facts: yes
   vars:
-    csv_file: "/home/csv/check_services_{{ ansible_date_time.epoch }}.csv"
+    # Define the services you want to monitor
+    monitored_services:
+      - name: "Spooler"
+        display_name: "Print Spooler"
+      - name: "Themes"
+        display_name: "Themes"
+      - name: "BITS"
+        display_name: "Background Intelligent Transfer Service"
+      - name: "W32Time"
+        display_name: "Windows Time"
+      - name: "SplunkUniversalForwarder"
+        display_name: "Splunk Universal Forwarder"
+      # Add more services as needed
+    
+    # CSV file path (will be created on the Ansible control machine)
+    csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
+    
+    # Results collection list
+    service_results: []
   tasks:
-    - name: Get Windows services information
+    - name: Get all services information
       ansible.windows.win_service_info:
-        name: "{{ item }}"
-      loop:
-        - Spooler
-        - Themes
-        - BITS
-        - W32Time
-        - SplunkUniversalForwarder
-      register: service_info
-      failed_when: false  # Don't fail if service doesn't exist
-      
-    - name: Prepare service data with unique key
+      register: all_services
+
+    - name: Initialize service results list
       set_fact:
-        services_data: "{{ services_data | default([]) + [service_item] }}"
+        service_results: []
+
+    - name: Check status of each monitored service
+      set_fact:
+        service_results: "{{ service_results + [current_service_status] }}"
       vars:
-        service_name: "{{ item.item }}"  # Original service name from the loop
-        service_details: "{{ item.services[item.item] | default({}) }}"  # Service details if found
-        service_item:
-          hostname: "{{ ansible_hostname }}"
-          service_name: "{{ service_name }}"
-          display_name: "{{ service_details.display_name | default(service_name) }}"
-          status: "{{ service_details.state | default('Missing') }}"
-          start_mode: "{{ service_details.start_mode | default('NA') }}"
-          timestamp: "{{ ansible_date_time.iso8601 }}"
-          unique_key: "{{ ansible_hostname }}|{{ service_name }}"
-      loop: "{{ service_info.results }}"
-      
-    - name: Create CSV header
-      lineinfile:
-        path: "{{ csv_file }}"
-        line: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp,unique_key"
-        create: yes
-        state: present
+        service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+        found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
+        current_service_status: "{{
+          {
+            'name': item.name,
+            'display_name': item.display_name,
+            'status': (found_service.state if service_exists else 'Missing'),
+            'start_mode': (found_service.start_mode if service_exists else 'NA'),
+            'timestamp': ansible_date_time.iso8601,
+            'unique_key': ansible_hostname + '|' + item.name
+          }
+        }}"
+      loop: "{{ monitored_services }}"
+
+    - name: Display current service status
+      debug:
+        msg: "{{ item.display_name }} ({{ item.name }}): {{ item.status }} - Start Mode: {{ item.start_mode }}"
+      loop: "{{ service_results }}"
+
+    - name: Remove existing CSV file and create new one with header
       delegate_to: localhost
       run_once: true
-      
-    - name: Write service data to CSV
-      lineinfile:
-        path: "{{ csv_file }}"
-        line: "{{ item.hostname }},{{ item.service_name }},\"{{ item.display_name }}\",{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
-        state: present
-      loop: "{{ services_data }}"
+      copy:
+        content: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp,UniqueKey\n"
+        dest: "{{ csv_output_path }}"
+      become: false
+
+    - name: Write service status to CSV on control machine
       delegate_to: localhost
+      lineinfile:
+        path: "{{ csv_output_path }}"
+        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
+        state: present
+      loop: "{{ service_results }}"
+      become: false
+
+    - name: Display summary
+      debug:
+        msg: 
+          - "Service status check completed for {{ inventory_hostname }}"
+          - "Results written to {{ csv_output_path }} on control machine"
+          - "Services checked: {{ service_results | length }}"
+          - "Running services: {{ service_results | selectattr('status', '==', 'running') | list | length }}"
+          - "Stopped services: {{ service_results | selectattr('status', '==', 'stopped') | list | length }}"
+          - "Missing services: {{ service_results | selectattr('status', '==', 'Missing') | list | length }}"
+
+    - name: Show services that are stopped or missing
+      debug:
+        msg: "⚠️  {{ item.display_name }} ({{ item.name }}): {{ item.status }}"
+      loop: "{{ service_results }}"
+      when: item.status != 'running'
 
     - name: Upload CSV to Directus via API
       uri:
