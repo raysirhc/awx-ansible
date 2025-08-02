@@ -15,21 +15,28 @@
         - W32Time
         - SplunkUniversalForwarder
       register: service_info
+      failed_when: false  # Don't fail if service doesn't exist
+      
+    - name: Debug service info (optional - remove in production)
+      debug:
+        msg: "Service {{ item.item }}: {{ item.services | default('Not found') }}"
+      loop: "{{ service_info.results }}"
       
     - name: Prepare service data with unique key
       set_fact:
         services_data: "{{ services_data | default([]) + [service_item] }}"
       vars:
+        service_name: "{{ item.item }}"  # Original service name from the loop
+        service_details: "{{ item.services[item.item] | default({}) }}"  # Service details if found
         service_item:
           hostname: "{{ ansible_hostname }}"
-          service_name: "{{ item.name }}"
-          display_name: "{{ item.display_name | default('N/A') }}"
-          status: "{{ item.state | default('Missing') }}"
-          start_mode: "{{ item.start_mode | default('NA') }}"
+          service_name: "{{ service_name }}"
+          display_name: "{{ service_details.display_name | default(service_name) }}"
+          status: "{{ service_details.state | default('Missing') }}"
+          start_mode: "{{ service_details.start_mode | default('NA') }}"
           timestamp: "{{ ansible_date_time.iso8601 }}"
-          unique_key: "{{ ansible_hostname }}|{{ item.name }}"
+          unique_key: "{{ ansible_hostname }}|{{ service_name }}"
       loop: "{{ service_info.results }}"
-      when: item.exists is defined
       
     - name: Create CSV header
       lineinfile:
@@ -43,7 +50,7 @@
     - name: Write service data to CSV
       lineinfile:
         path: "{{ csv_file }}"
-        line: "{{ item.hostname }},{{ item.service_name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
+        line: "{{ item.hostname }},{{ item.service_name }},\"{{ item.display_name }}\",{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
         state: present
       loop: "{{ services_data }}"
       delegate_to: localhost
@@ -54,11 +61,17 @@
         method: POST
         headers:
           Authorization: "Bearer {{ directus_token }}"
-          Content-Type: "multipart/form-data"
         body_format: form-multipart
         body:
-          file: "{{ csv_file }}"
           title: "Services Report {{ ansible_date_time.date }}"
           folder: "{{ directus_folder_id | default(omit) }}"
+          file: "{{ lookup('file', csv_file) | b64encode }}"
+          filename: "check_services_{{ ansible_date_time.epoch }}.csv"
       delegate_to: localhost
       run_once: true
+      register: upload_result
+      
+    - name: Display upload result
+      debug:
+        msg: "File uploaded successfully with ID: {{ upload_result.json.data.id | default('Unknown') }}"
+      when: upload_result is succeeded
