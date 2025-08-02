@@ -40,7 +40,7 @@
             'name': item.name,
             'display_name': item.display_name,
             'status': (found_service.state if service_exists else 'Missing'),
-            'start_mode': (found_service.start_mode if service_exists else 'N/A'),
+            'start_mode': (found_service.start_mode if service_exists else 'NA'),
           }
         }}"
       loop: "{{ monitored_services }}"
