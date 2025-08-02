@@ -3,7 +3,7 @@
   hosts: windows_servers
   gather_facts: yes
   vars:
-    csv_file: "/csv/check_services_{{ ansible_date_time.epoch }}.csv"
+    csv_file: "/home/csv/check_services_{{ ansible_date_time.epoch }}.csv"
   tasks:
     - name: Get Windows services information
       ansible.windows.win_service_info:
