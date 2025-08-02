@@ -22,16 +22,13 @@
     
     # Results collection list
     service_results: []
-
   tasks:
     - name: Get all services information
       ansible.windows.win_service_info:
       register: all_services
-
     - name: Initialize service results list
       set_fact:
         service_results: []
-
     - name: Check status of each monitored service
       set_fact:
         service_results: "{{ service_results + [current_service_status] }}"
@@ -48,22 +45,17 @@
         }}"
       loop: "{{ monitored_services }}"
       when: service_exists or not service_exists  # Always execute
-
     - name: Display current service status
       debug:
         msg: "{{ item.display_name }} ({{ item.name }}): {{ item.status }} - Start Mode: {{ item.start_mode }}"
       loop: "{{ service_results }}"
-
-    - name: Create CSV header on control machine
+    - name: Remove existing CSV file and create new one with header
       delegate_to: localhost
       run_once: true
-      lineinfile:
-        path: "{{ csv_output_path }}"
-        line: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp"
-        create: yes
-        state: present
+      copy:
+        content: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp\n"
+        dest: "{{ csv_output_path }}"
       become: false
-
     - name: Write service status to CSV on control machine
       delegate_to: localhost
       lineinfile:
@@ -72,7 +64,6 @@
         state: present
       loop: "{{ service_results }}"
       become: false
-
     - name: Display summary
       debug:
         msg: 
@@ -82,7 +73,6 @@
           - "Running services: {{ service_results | selectattr('status', '==', 'running') | list | length }}"
           - "Stopped services: {{ service_results | selectattr('status', '==', 'stopped') | list | length }}"
           - "Missing services: {{ service_results | selectattr('status', '==', 'Not Found') | list | length }}"
-
     - name: Show services that are stopped or missing
       debug:
         msg: "⚠️  {{ item.display_name }} ({{ item.name }}): {{ item.status }}"
