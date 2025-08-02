@@ -62,10 +62,3 @@
           folder: "{{ directus_folder_id | default(omit) }}"
       delegate_to: localhost
       run_once: true
-
-# Alternative: Using template module for more control
-- name: Generate CSV using template
-  template:
-    src: services.csv.j2
-    dest: "{{ csv_file }}"
-  delegate_to: localhost
