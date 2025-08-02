@@ -1,0 +1,6 @@
+Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp,unique_key
+{% for host in groups['windows_hosts'] %}
+{% for service in hostvars[host]['services_data'] %}
+{{ service.hostname }},{{ service.service_name }},{{ service.display_name }},{{ service.status }},{{ service.start_mode }},{{ service.timestamp }},{{ service.hostname }}|{{ service.service_name }}
+{% endfor %}
+{% endfor %}
