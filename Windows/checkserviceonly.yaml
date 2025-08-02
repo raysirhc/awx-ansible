@@ -41,6 +41,8 @@
             'display_name': item.display_name,
             'status': (found_service.state if service_exists else 'Missing'),
             'start_mode': (found_service.start_mode if service_exists else 'NA'),
+            'timestamp': {{ ansible_date_time.iso8601 }},
+            'unique_key': {{ ansible_hostname }}|{{ service_name }},
           }
         }}"
       loop: "{{ monitored_services }}"
@@ -60,7 +62,7 @@
       delegate_to: localhost
       lineinfile:
         path: "{{ csv_output_path }}"
-        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ ansible_date_time.iso8601 }}"
+        line: "{{ inventory_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ ansible_date_time.iso8601 }},{{ item,ansible_hostname }}|{{ item.service_name}}"
         state: present
       loop: "{{ service_results }}"
       become: false
