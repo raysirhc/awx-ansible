@@ -15,7 +15,9 @@
         display_name: "Windows Time"
       - name: "SplunkUniversalForwarder"
         display_name: "Splunk Universal Forwarder"
-      # Add more services as needed
+      - name: "Agent"
+        display_name: "Agent"      
+        # Add more services as needed
     
     # CSV file path (will be created on the Ansible control machine)
     csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
@@ -97,8 +99,8 @@
         body:
           title: "Services Report {{ ansible_date_time.date }}"
           folder: "{{ directus_folder_id | default(omit) }}"
-          file: "{{ lookup('file', csv_file) | b64encode }}"
-          filename: "check_services_{{ ansible_date_time.epoch }}.csv"
+          file: "{{ lookup('file', csv_output_path) | b64encode }}"
+          filename: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
       delegate_to: localhost
       run_once: true
       register: upload_result
