@@ -91,7 +91,7 @@
 
     - name: Upload CSV to Directus via API
       uri:
-        url: "{{ directus_url }}/files"
+        url: "{{ directus_url }}"
         method: POST
         headers:
           Authorization: "Bearer {{ directus_token }}"
