@@ -38,13 +38,13 @@
             if (Test-Path $cleanPath) {
               (Get-Item $cleanPath).VersionInfo.ProductVersion
             } else {
-              "Unknown"
+              "UnknownA"
             }
           } else {
-            "Unknown"
+            "UnknownB"
           }
         } else {
-          "Unknown"
+          "UnknownC"
         }
       register: exe_version_results
       loop: "{{ monitored_services }}"
