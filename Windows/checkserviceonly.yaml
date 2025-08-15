@@ -1,29 +1,31 @@
 ---
-- name: Check status of specific Windows services (Read-Only)
+- name: Check status and version of specific Windows services (with compliance check)
   hosts: windows_servers
   gather_facts: yes
   vars:
-    # Define the services you want to monitor
     monitored_services:
       - name: "Spooler"
         display_name: "Print Spooler"
+        approved_version: "10.0.19041.1"
       - name: "Themes"
         display_name: "Themes"
+        approved_version: "10.0.19041.1"
       - name: "BITS"
         display_name: "Background Intelligent Transfer Service"
+        approved_version: "7.8.9600.16384"
       - name: "W32Time"
         display_name: "Windows Time"
+        approved_version: "10.0.19041.1"
       - name: "SplunkUniversalForwarder"
         display_name: "Splunk Universal Forwarder"
+        approved_version: "9.0.4.1"
       - name: "Agent"
         display_name: "Security Agent"
-      # Add more services as needed
-    
-    # CSV file path (will be created on the Ansible control machine)
+        approved_version: "1.2.3.4"
+
     csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
-    
-    # Results collection list
     service_results: []
+
   tasks:
     - name: Get all services information
       ansible.windows.win_service_info:
@@ -33,34 +35,66 @@
       set_fact:
         service_results: []
 
-    - name: Check status of each monitored service
+    - name: Get service executable version (PowerShell)
+      ansible.windows.win_shell: |
+        $svc = Get-Service -Name "{{ item.name }}" -ErrorAction SilentlyContinue
+        if ($svc) {
+          $path = (Get-WmiObject Win32_Service -Filter "Name='{{ item.name }}'").PathName
+          $exe = $path -replace '"','' -replace ' .*$',''
+          if (Test-Path $exe) {
+            (Get-Item $exe).VersionInfo.FileVersion
+          } else {
+            "Path not found"
+          }
+        } else {
+          "Missing"
+        }
+      register: service_versions
+      loop: "{{ monitored_services }}"
+
+    - name: Build service results with version & compliance
       set_fact:
         service_results: "{{ service_results + [current_service_status] }}"
       vars:
+        idx: "{{ loop.index0 }}"
         service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
         found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
+        svc_version: "{{ service_versions.results[idx].stdout | trim }}"
+        compliance_status: >-
+          {% if not service_exists %}
+            Missing
+          {% elif not svc_version or svc_version == 'Path not found' %}
+            Unknown
+          {% elif svc_version != item.approved_version %}
+            Outdated
+          {% else %}
+            Compliant
+          {% endif %}
         current_service_status: "{{
           {
             'name': item.name,
             'display_name': item.display_name,
             'status': (found_service.state if service_exists else 'Missing'),
             'start_mode': (found_service.start_mode if service_exists else 'NA'),
+            'version': (svc_version if svc_version else 'Unknown'),
+            'approved_version': item.approved_version,
+            'compliance_status': compliance_status,
             'timestamp': ansible_date_time.iso8601,
             'unique_key': ansible_hostname + '|' + item.name
           }
         }}"
       loop: "{{ monitored_services }}"
 
-    - name: Display current service status
+    - name: Display current service status and compliance
       debug:
-        msg: "{{ item.display_name }} ({{ item.name }}): {{ item.status }} - Start Mode: {{ item.start_mode }}"
+        msg: "{{ item.display_name }} ({{ item.name }}): {{ item.status }} - Start Mode: {{ item.start_mode }} - Version: {{ item.version }} - Compliance: {{ item.compliance_status }}"
       loop: "{{ service_results }}"
 
     - name: Remove existing CSV file and create new one with header
       delegate_to: localhost
       run_once: true
       copy:
-        content: "Hostname,ServiceName,DisplayName,Status,StartMode,Timestamp,UniqueKey\n"
+        content: "Hostname,ServiceName,DisplayName,Status,StartMode,Version,ApprovedVersion,ComplianceStatus,Timestamp,UniqueKey\n"
         dest: "{{ csv_output_path }}"
       become: false
 
@@ -68,7 +102,7 @@
       delegate_to: localhost
       lineinfile:
         path: "{{ csv_output_path }}"
-        line: "{{ ansible_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ item.timestamp }},{{ item.unique_key }}"
+        line: "{{ ansible_hostname }},{{ item.name }},{{ item.display_name }},{{ item.status }},{{ item.start_mode }},{{ item.version }},{{ item.approved_version }},{{ item.compliance_status }},{{ item.timestamp }},{{ item.unique_key }}"
         state: present
       loop: "{{ service_results }}"
       become: false
@@ -82,9 +116,10 @@
           - "Running services: {{ service_results | selectattr('status', '==', 'running') | list | length }}"
           - "Stopped services: {{ service_results | selectattr('status', '==', 'stopped') | list | length }}"
           - "Missing services: {{ service_results | selectattr('status', '==', 'Missing') | list | length }}"
+          - "Outdated/Non-compliant: {{ service_results | selectattr('compliance_status', '!=', 'Compliant') | list | length }}"
 
-    - name: Show services that are stopped or missing
+    - name: Show services that are stopped, missing, or outdated
       debug:
-        msg: "⚠️  {{ item.display_name }} ({{ item.name }}): {{ item.status }}"
+        msg: "⚠️  {{ item.display_name }} ({{ item.name }}): {{ item.status }} - Version: {{ item.version }} - Compliance: {{ item.compliance_status }}"
       loop: "{{ service_results }}"
-      when: item.status != 'running'
+      when: item.status != 'running' or item.compliance_status != 'Compliant'
