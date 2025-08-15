@@ -14,9 +14,9 @@
         display_name: "Windows Time"
       - name: "SplunkUniversalForwarder"
         display_name: "Splunk Universal Forwarder"
-      - name: "MorphisecAgent"
-        display_name: "Morphisec Agent"
-    csv_output_path: "/home/csv/check_service_status_exeversion.csv"
+      - name: "Agent"
+        display_name: "Security Agent"
+    csv_output_path: "/home/csv/check_service_status_exeversion_{{ ansible_date_time.date }}.csv"
     service_results: []
   tasks:
     - name: Get all services information
@@ -27,7 +27,7 @@
       set_fact:
         service_results: []
 
-    - name: Get EXE version via PowerShell for each service
+    - name: Get EXE product version via PowerShell for each service
       ansible.windows.win_shell: |
         $serviceName = "{{ item.name }}"
         $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
@@ -36,7 +36,7 @@
           if ($binaryPath) {
             $cleanPath = $binaryPath -replace '"', '' -replace ' .*', ''
             if (Test-Path $cleanPath) {
-              (Get-Item $cleanPath).VersionInfo.FileVersion
+              (Get-Item $cleanPath).VersionInfo.ProductVersion
             } else {
               "Unknown"
             }
