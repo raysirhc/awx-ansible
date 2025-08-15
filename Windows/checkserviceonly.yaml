@@ -14,8 +14,8 @@
         display_name: "Windows Time"
       - name: "SplunkUniversalForwarder"
         display_name: "Splunk Universal Forwarder"
-      - name: "Agent"
-        display_name: "Security Agent"
+      - name: "MorphisecAgent"
+        display_name: "Morphisec Agent"
     csv_output_path: "/home/csv/check_service_status_exeversion_{{ ansible_date_time.date }}.csv"
     service_results: []
   tasks:
