@@ -1,0 +1,40 @@
+---
+- name: Check status and EXE/MSI version of specific Windows services (Read-Only)
+  hosts: windows_servers
+  gather_facts: yes
+  vars:
+    monitored_services:
+      - name: "Spooler"
+        display_name: "Print Spooler"
+      - name: "Themes"
+        display_name: "Themes"
+      - name: "BITS"
+        display_name: "Background Intelligent Transfer Service"
+      - name: "W32Time"
+        display_name: "Windows Time"
+      - name: "SplunkUniversalForwarder"
+        display_name: "Splunk Universal Forwarder"
+      - name: "Agent"
+        display_name: "Security Agent"
+
+    csv_output_path: "/home/csv/check_service_status_hybridversion_{{ ansible_date_time.date }}.csv"
+    service_results: []
+
+  tasks:
+    - name: Get all services information
+      ansible.windows.win_service_info:
+      register: all_services
+
+    - name: Gather installed package facts (for MSI fallback)
+      ansible.windows.win_package_facts:
+
+    - name: Initialize service results list
+      set_fact:
+        service_results: []
+
+    - name: Check status and get EXE/MSI version for each monitored service
+      block:
+        - name: Build service facts with version info
+          vars:
+            service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+            found_service: "{{ all_services.services | selectattr('name', '==', item.name
