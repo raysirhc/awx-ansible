@@ -1,29 +1,23 @@
 ---
-- name: Check status and version of specific Windows services (Read-Only)
+- name: Check status and EXE version of specific Windows services (Read-Only)
   hosts: windows_servers
   gather_facts: yes
   vars:
     monitored_services:
       - name: "Spooler"
         display_name: "Print Spooler"
-        product_name: "Windows Driver Foundation"
       - name: "Themes"
         display_name: "Themes"
-        product_name: "Themes"
       - name: "BITS"
         display_name: "Background Intelligent Transfer Service"
-        product_name: "Background Intelligent Transfer Service"
       - name: "W32Time"
         display_name: "Windows Time"
-        product_name: "Windows Time"
       - name: "SplunkUniversalForwarder"
         display_name: "Splunk Universal Forwarder"
-        product_name: "UniversalForwarder"
       - name: "Agent"
         display_name: "Security Agent"
-        product_name: "Security Agent"
 
-    csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
+    csv_output_path: "/home/csv/check_service_status_exeversion_{{ ansible_date_time.date }}.csv"
     service_results: []
 
   tasks:
@@ -31,32 +25,43 @@
       ansible.windows.win_service_info:
       register: all_services
 
-    - name: Gather installed package facts
-      ansible.windows.win_package_facts:
-      register: package_facts
-
     - name: Initialize service results list
       set_fact:
         service_results: []
 
-    - name: Check status and version of each monitored service
-      set_fact:
-        service_results: "{{ service_results + [current_service_status] }}"
-      vars:
-        service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
-        found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
-        version_match: "{{ package_facts.packages | selectattr('name', 'search', item.product_name) | list | first }}"
-        current_service_status: "{{
-          {
-            'name': item.name,
-            'display_name': item.display_name,
-            'status': (found_service.state if service_exists else 'Missing'),
-            'start_mode': (found_service.start_mode if service_exists else 'NA'),
-            'version': (version_match.version if version_match is defined else 'Unknown'),
-            'timestamp': ansible_date_time.iso8601,
-            'unique_key': ansible_hostname + '|' + item.name
-          }
-        }}"
+    - name: Check status and EXE version of each monitored service
+      block:
+        - name: Build service facts with EXE version
+          vars:
+            service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
+            found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
+            exe_path: "{{ (found_service.binary_path | regex_replace('\"','')) if service_exists else '' }}"
+          block:
+            - name: Get EXE version via PowerShell
+              ansible.windows.win_shell: |
+                if (Test-Path "{{ exe_path }}") {
+                  (Get-Item "{{ exe_path }}").VersionInfo.FileVersion
+                } else {
+                  "Unknown"
+                }
+              register: exe_version_result
+              when: exe_path != ""
+
+            - name: Append service result
+              set_fact:
+                service_results: "{{ service_results + [current_service_status] }}"
+              vars:
+                current_service_status: "{{
+                  {
+                    'name': item.name,
+                    'display_name': item.display_name,
+                    'status': (found_service.state if service_exists else 'Missing'),
+                    'start_mode': (found_service.start_mode if service_exists else 'NA'),
+                    'version': exe_version_result.stdout | default('Unknown'),
+                    'timestamp': ansible_date_time.iso8601,
+                    'unique_key': ansible_hostname + '|' + item.name
+                  }
+                }}"
       loop: "{{ monitored_services }}"
 
     - name: Remove existing CSV file and create new one with header
