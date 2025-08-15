@@ -6,16 +6,22 @@
     monitored_services:
       - name: "Spooler"
         display_name: "Print Spooler"
+        exe_path: "C:\\Windows\\System32\\spoolsv.exe"
       - name: "Themes"
         display_name: "Themes"
+        exe_path: "C:\\Windows\\System32\\svchost.exe"
       - name: "BITS"
         display_name: "Background Intelligent Transfer Service"
+        exe_path: "C:\\Windows\\System32\\svchost.exe"
       - name: "W32Time"
         display_name: "Windows Time"
+        exe_path: "C:\\Windows\\System32\\svchost.exe"
       - name: "SplunkForwarder"
         display_name: "Splunk Universal Forwarder"
+        exe_path: "C:\\Program Files\\SplunkUniversalForwarder\\bin\\splunkd.exe"
       - name: "MorphisecAgent"
         display_name: "Morphisec Agent"
+        exe_path: "C:\\Program Files\\Morphisec\\bin\\MorphisecAgent.exe"
     csv_output_path: "/home/csv/check_service_status_exeversion_{{ ansible_date_time.date }}.csv"
     service_results: []
   tasks:
@@ -29,22 +35,11 @@
 
     - name: Get EXE product version via PowerShell for each service
       ansible.windows.win_shell: |
-        $serviceName = "{{ item.name }}"
-        $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-        if ($service) {
-          $binaryPath = (Get-WmiObject -Class Win32_Service -Filter "Name='$serviceName'").PathName
-          if ($binaryPath) {
-            $cleanPath = $binaryPath -replace '"', '' -replace ' .*', ''
-            if (Test-Path $cleanPath) {
-              (Get-Item $cleanPath).VersionInfo.ProductVersion
-            } else {
-              "UnknownA"
-            }
-          } else {
-            "UnknownB"
-          }
+        $cleanPath = "{{ item.exe_path }}"
+        if (Test-Path $cleanPath) {
+          (Get-Item $cleanPath).VersionInfo.ProductVersion
         } else {
-          "UnknownC"
+          "Path Not Found"
         }
       register: exe_version_results
       loop: "{{ monitored_services }}"
