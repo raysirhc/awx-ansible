@@ -12,7 +12,7 @@
         display_name: "Background Intelligent Transfer Service"
       - name: "W32Time"
         display_name: "Windows Time"
-      - name: "SplunkUniversalForwarder"
+      - name: "SplunkForwarder"
         display_name: "Splunk Universal Forwarder"
       - name: "MorphisecAgent"
         display_name: "Morphisec Agent"
