@@ -27,44 +27,47 @@
       set_fact:
         service_results: []
 
-    - name: Build service facts with EXE version
-      vars:
-        service_exists: "{{ all_services.services | selectattr('name', '==', item.name) | list | length > 0 }}"
-        found_service: "{{ all_services.services | selectattr('name', '==', item.name) | first }}"
-        exe_path: "{{ (found_service.binary_path | regex_replace('\"','')) if service_exists else '' }}"
-      block:
-        - name: Get EXE version via PowerShell
-          ansible.windows.win_shell: |
-            if (Test-Path "{{ exe_path }}") {
-              (Get-Item "{{ exe_path }}").VersionInfo.FileVersion
+    - name: Get EXE version via PowerShell for each service
+      ansible.windows.win_shell: |
+        $serviceName = "{{ item.name }}"
+        $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+        if ($service) {
+          $binaryPath = (Get-WmiObject -Class Win32_Service -Filter "Name='$serviceName'").PathName
+          if ($binaryPath) {
+            $cleanPath = $binaryPath -replace '"', '' -replace ' .*', ''
+            if (Test-Path $cleanPath) {
+              (Get-Item $cleanPath).VersionInfo.FileVersion
             } else {
               "Unknown"
             }
-          register: exe_version_result
-          when: exe_path != ""
-
-        - name: Set default version for missing EXE
-          set_fact:
-            exe_version_result:
-              stdout: "Unknown"
-          when: exe_path == ""
-
-        - name: Append service result
-          set_fact:
-            service_results: "{{ service_results + [current_service_status] }}"
-          vars:
-            current_service_status: "{{
-              {
-                'name': item.name,
-                'display_name': item.display_name,
-                'status': (found_service.state if service_exists else 'Missing'),
-                'start_mode': (found_service.start_mode if service_exists else 'NA'),
-                'version': exe_version_result.stdout | default('Unknown'),
-                'timestamp': ansible_date_time.iso8601,
-                'unique_key': ansible_hostname + '|' + item.name
-              }
-            }}"
+          } else {
+            "Unknown"
+          }
+        } else {
+          "Unknown"
+        }
+      register: exe_version_results
       loop: "{{ monitored_services }}"
+      failed_when: false
+
+    - name: Build service results
+      set_fact:
+        service_results: "{{ service_results + [current_service_status] }}"
+      vars:
+        service_exists: "{{ all_services.services | selectattr('name', '==', item.0.name) | list | length > 0 }}"
+        found_service: "{{ all_services.services | selectattr('name', '==', item.0.name) | first }}"
+        current_service_status: "{{
+          {
+            'name': item.0.name,
+            'display_name': item.0.display_name,
+            'status': (found_service.state if service_exists else 'Missing'),
+            'start_mode': (found_service.start_mode if service_exists else 'NA'),
+            'version': item.1.stdout | default('Unknown'),
+            'timestamp': ansible_date_time.iso8601,
+            'unique_key': ansible_hostname + '|' + item.0.name
+          }
+        }}"
+      loop: "{{ monitored_services | zip(exe_version_results.results) | list }}"
 
     - name: Remove existing CSV file and create new one with header
       delegate_to: localhost
