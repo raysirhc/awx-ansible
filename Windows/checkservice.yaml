@@ -19,8 +19,7 @@
         display_name: "Agent"      
         # Add more services as needed
     
-    # CSV file path (will be created on the Ansible control machine)
-    csv_output_path: "/home/csv/check_service_status_only_{{ ansible_date_time.date }}.csv"
+    # CSV file path (will be created on the Ansible control machine
     
     # Results collection list
     service_results: []
