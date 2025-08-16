@@ -2,8 +2,8 @@
 # This file uses the community.general.proxmox inventory plugin
 
 plugin: community.general.proxmox
-url: https://192.168.110.123:8006
-user: root
+url: home ip
+user: root@pam
 password: "{{ vault_proxmox_password }}"
 # Alternative: use token authentication (recommended)
 # token_id: your_token_id
