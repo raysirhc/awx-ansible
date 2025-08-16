@@ -7,3 +7,5 @@ collections:
   - 'community.mysql'
   - 'ansible.windows'
   - 'microsoft.ad'
+  - 'community.general.proxmox'
+  - 'vmware.vmware.vms'
