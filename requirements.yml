@@ -8,3 +8,4 @@ collections:
   - 'ansible.windows'
   - 'microsoft.ad'
   - 'vmware.vmware'
+  - 'community.proxmox'
