@@ -1,0 +1,80 @@
+# proxmox_inventory.yml - Dynamic inventory configuration
+# This file uses the community.general.proxmox inventory plugin
+
+plugin: community.general.proxmox
+url: https://192.168.110.123:8006
+user: root
+password: "{{ vault_proxmox_password }}"
+# Alternative: use token authentication (recommended)
+# token_id: your_token_id
+# token_secret: "{{ vault_proxmox_token }}"
+
+# Validate SSL certificates (set to false for self-signed certs)
+validate_certs: false
+
+# Only include running VMs
+filters:
+  - status == "running"
+
+# Group VMs by various attributes
+keyed_groups:
+  # Group by VM status
+  - key: status
+    prefix: status
+    separator: "_"
+  
+  # Group by node (Proxmox host)
+  - key: node
+    prefix: node
+    separator: "_"
+  
+  # Group by VM type (qemu/lxc)
+  - key: type
+    prefix: type
+    separator: "_"
+  
+  # Group by custom tags (if you use tags in Proxmox)
+  - key: tags
+    prefix: tag
+    separator: "_"
+
+# Create groups based on VM names (useful for role-based grouping)
+groups:
+  web_servers: "'web' in inventory_hostname"
+  db_servers: "'db' in inventory_hostname"
+  app_servers: "'app' in inventory_hostname"
+  prod_servers: "'prod' in inventory_hostname"
+  dev_servers: "'dev' in inventory_hostname"
+
+# Compose variables for each host
+compose:
+  # Set ansible_host to the VM's IP address
+  ansible_host: network.net0.ip | default(network.net0.ip6) | default(ansible_host)
+  
+  # VM specific information
+  proxmox_vmid: vmid
+  proxmox_node: node
+  proxmox_status: status
+  proxmox_type: type
+  proxmox_name: name
+  proxmox_tags: tags | default([])
+  
+  # Memory and CPU info
+  proxmox_memory_mb: memory
+  proxmox_cpu_cores: cores
+  
+  # Set ansible_user based on VM type or naming convention
+  ansible_user: >-
+    'root' if 'lxc' in inventory_hostname or 'centos' in inventory_hostname
+    else 'ubuntu' if 'ubuntu' in inventory_hostname
+    else 'debian' if 'debian' in inventory_hostname
+    else 'your_default_user'
+
+# Cache settings (improves performance)
+cache: true
+cache_plugin: memory
+cache_timeout: 300
+cache_connection: proxmox_inventory_cache
+
+# Debug mode (set to true for troubleshooting)
+# strict: false
